@@ -4,6 +4,7 @@ import json
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import datetime
 # 引入 Google 官方稳定版库
 import google.generativeai as genai
@@ -211,43 +212,68 @@ def run_daily_analysis():
 # ================= 4. 可视化 (双轴图表) =================
 
 def generate_chart(df):
-    """【恢复高级图表】绘制 双轴图 (价格 vs 情绪)"""
+    """【优化版】绘制双轴图，修复 Day 1 时间跨度过大的问题"""
     if df is None or len(df) < 1:
         print("⚠️ 数据不足，跳过画图。")
         return
 
-    print("🎨 正在绘制双轴趋势图...")
+    print("🎨 正在绘制双轴趋势图 (优化版)...")
     
-    # 设置风格
-    plt.style.use('seaborn-v0_8-darkgrid' if 'seaborn-v0_8-darkgrid' in plt.style.available else 'ggplot')
+    # 设置风格 (尝试使用更现代的风格)
+    try:
+        plt.style.use('seaborn-v0_8-darkgrid')
+    except:
+        plt.style.use('ggplot')
     
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    # X轴处理
+    # X轴处理：转换为 datetime 对象
     dates = pd.to_datetime(df['date'])
 
-    # 左轴：币价 (蓝色实线)
-    color_price = 'tab:blue'
-    ax1.set_xlabel('Date')
+    # === 左轴：币价 (蓝色) ===
+    color_price = '#1f77b4' # 更专业的深蓝
+    ax1.set_xlabel('Date', fontweight='bold')
     ax1.set_ylabel('BTC Price ($)', color=color_price, fontweight='bold')
-    ax1.plot(dates, df['price'], color=color_price, marker='o', linewidth=2, label='Price')
+    ax1.plot(dates, df['price'], color=color_price, marker='o', markersize=8, linewidth=2.5, label='Price')
     ax1.tick_params(axis='y', labelcolor=color_price)
+    ax1.grid(True, linestyle='--', alpha=0.6) # 网格虚线
 
-    # 右轴：情绪 (红色虚线)
+    # === 右轴：情绪 (红色) ===
     ax2 = ax1.twinx()  
-    color_sent = 'tab:red'
+    color_sent = '#d62728' # 更专业的深红
     ax2.set_ylabel('AI Sentiment (0-100)', color=color_sent, fontweight='bold')
-    ax2.plot(dates, df['score'], color=color_sent, linestyle='--', marker='x', linewidth=2, label='Sentiment')
+    ax2.plot(dates, df['score'], color=color_sent, linestyle='--', marker='s', markersize=8, linewidth=2.5, label='Sentiment')
     ax2.tick_params(axis='y', labelcolor=color_sent)
-    ax2.set_ylim(0, 100) # 固定 0-100 范围
+    ax2.set_ylim(0, 100) 
     
-    # 添加参考线 (50分是中性)
-    ax2.axhline(50, color='gray', linestyle=':', alpha=0.5)
+    # 参考线
+    ax2.axhline(50, color='gray', linestyle=':', alpha=0.5, label='Neutral')
 
-    plt.title('Bitcoin Price vs AI Sentiment Trend', fontsize=14)
+    # === 🔥 核心修复：X 轴时间格式化 ===
+    # 强制显示格式为 "02-12" (月-日)
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    
+    # 如果数据少于 5 天，强制每天显示一个刻度
+    if len(df) <= 5:
+        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+    else:
+        # 数据多了就自动调整，防止挤在一起
+        ax1.xaxis.set_major_locator(mdates.AutoDateLocator())
+
+    # === 🔥 特殊处理 Day 1 ===
+    # 如果只有一个点，手动设置 X 轴范围，让点居中
+    if len(df) == 1:
+        one_date = dates.iloc[0]
+        # 范围设为：昨天 -> 明天
+        ax1.set_xlim(one_date - pd.Timedelta(days=1), one_date + pd.Timedelta(days=1))
+
+    # 让日期标签斜着放，防重叠
+    fig.autofmt_xdate()
+
+    plt.title('Bitcoin Price vs AI Sentiment Trend', fontsize=14, pad=20)
     fig.tight_layout()
     
-    plt.savefig(CHART_FILE)
+    plt.savefig(CHART_FILE, dpi=300) # 提高分辨率，发推更清晰
     print(f"🖼️ 图表已生成: {CHART_FILE}")
 
 # ================= 5. 程序入口 =================
@@ -258,5 +284,6 @@ if __name__ == "__main__":
     # 2. 如果分析成功，绘制图表
     if df is not None:
         generate_chart(df)
+
 
 
