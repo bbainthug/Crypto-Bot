@@ -1,5 +1,4 @@
 requests
-google-generativeai
 pandas
 matplotlib
-seaborn
+google-generativeai
