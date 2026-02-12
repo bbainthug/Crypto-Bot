@@ -1,0 +1,58 @@
+name: Daily Crypto Analysis
+
+# 设定触发条件
+on:
+  schedule:
+    # 每天 UTC 00:00 运行 (相当于北京时间早上 8:00)
+    - cron: '0 0 * * *'
+  # 允许你手动点按钮运行 (方便测试)
+  workflow_dispatch:
+
+# 设置权限 (为了能把 CSV 和图片存回仓库)
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. 下载你的代码到虚拟电脑
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. 安装 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # 3. 安装依赖库 (根据你的清单)
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # 4. 运行你的机器人
+      - name: Run Analysis Script
+        env:
+          # 把刚才设置的 Secret 注入给代码
+          CRYPTO_PANIC_KEY: ${{ secrets.CRYPTO_PANIC_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          # 注意：这里的文件名要改成你上传的那个 Python 文件名！
+          python Advanced_Bot.py
+
+      # 5. 把生成的文件 (CSV, JSON, PNG) 存回仓库
+      - name: Commit and Push results
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "actions@github.com"
+          
+          # 尝试添加生成的文件
+          git add *.csv *.json *.png
+          
+          # 提交 (如果没有新文件生成，这步不报错)
+          git commit -m "📈 Auto-update: Daily Analysis Data" || echo "No changes to commit"
+          
+          # 推送
+          git push
