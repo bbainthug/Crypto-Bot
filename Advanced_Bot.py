@@ -160,8 +160,8 @@ def run_daily_analysis():
     
     # 5. 调用 AI
     try:
-        print("🤖 正在请求 Gemini 1.5 Flash...")
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        print("🤖 正在请求 Gemini-3-flash-preview...")
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         response = model.generate_content(prompt)
         
         # 清洗返回数据 (去掉可能存在的 ```json )
@@ -258,3 +258,4 @@ if __name__ == "__main__":
     # 2. 如果分析成功，绘制图表
     if df is not None:
         generate_chart(df)
+
