@@ -133,7 +133,7 @@ def run_daily_analysis():
 
     # 4. 构建 Prompt (提示词)
     # 我们把新闻列表处理成字符串，节省 Token
-    news_text = "\n".join([f"- {n['title']} (Votes: {n['votes'].get('positive',0)})" for n in news_list])
+    news_text = "\n".join([f"- {n.get('title', '')} (Votes: {n.get('votes', {}).get('positive', 0)})"for n in news_list])
 
     prompt = f"""
     你是华尔街顶级的加密货币分析师。
@@ -258,4 +258,5 @@ if __name__ == "__main__":
     # 2. 如果分析成功，绘制图表
     if df is not None:
         generate_chart(df)
+
 
