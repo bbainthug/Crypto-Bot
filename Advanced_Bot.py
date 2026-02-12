@@ -29,6 +29,12 @@ else:
     PROXY_URL = "http://127.0.0.1:7890" # 你的端口
     os.environ['HTTP_PROXY'] = PROXY_URL
     os.environ['HTTPS_PROXY'] = PROXY_URL
+
+# ================= 文件路径定义  =================
+HISTORY_FILE = "knowledge_base.json"
+SENTIMENT_FILE = "sentiment_data.csv"
+CHART_FILE = "sentiment_chart.png"
+# ===============================================================
 # ================= 模块 1: 基础工具 =================
 def get_btc_price():
     """获取比特币当前价格 (用于对比情绪)"""
@@ -183,4 +189,5 @@ def generate_chart(df):
 # ================= 主程序 =================
 if __name__ == "__main__":
     df = run_daily_analysis()
+
     generate_chart(df)
